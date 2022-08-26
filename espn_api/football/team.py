@@ -13,6 +13,10 @@ class Team(object):
         self.ties = data['record']['overall']['ties']
         self.points_for = data['record']['overall']['pointsFor']
         self.points_against = round(data['record']['overall']['pointsAgainst'], 2)
+        self.acquisitions = data.get('transactionCounter', {}).get('acquisitions', 0)
+        self.acquisition_budget_spent = data.get('transactionCounter', {}).get('acquisitionBudgetSpent', 0)
+        self.drops = data.get('transactionCounter', {}).get('drops', 0)
+        self.trades = data.get('transactionCounter', {}).get('trades', 0)
         self.playoff_pct = data.get('currentSimulationResults', {}).get('playoffPct', 0) * 100
         self.draft_projected_rank = data.get('draftDayProjectedRank', 0)
         self.current_projected_rank = data.get('currentProjectedRank', 0)
@@ -55,22 +59,30 @@ class Team(object):
                 if matchup['away']['teamId'] == self.team_id:
                     score = matchup['away']['totalPoints']
                     opponentId = matchup['home']['teamId']
-                    self.outcomes.append(matchup['winner'])
+                    self.outcomes.append(self._get_winner(matchup['winner'], True))
                     self.scores.append(score)
                     self.schedule.append(opponentId)
                 elif matchup['home']['teamId'] == self.team_id:
                     score = matchup['home']['totalPoints']
                     opponentId = matchup['away']['teamId']
-                    self.outcomes.append(matchup['winner'])
+                    self.outcomes.append(self._get_winner(matchup['winner'], False))
                     self.scores.append(score)
                     self.schedule.append(opponentId)
             elif matchup['home']['teamId'] == self.team_id:
                 score = matchup['home']['totalPoints']
                 opponentId = matchup['home']['teamId']
-                self.outcomes.append(matchup['winner'])
+                self.outcomes.append(self._get_winner(matchup['winner'], False))
                 self.scores.append(score)
                 self.schedule.append(opponentId)
     
+    def _get_winner(self, winner: str, is_away: bool) -> str:
+        if winner == 'UNDECIDED':
+            return 'U'
+        elif (is_away and winner == 'AWAY') or (not is_away and winner == 'HOME'):
+            return 'W'
+        else:
+            return 'L'
+
     def get_player_name(self, playerId: int) -> str:
         for player in self.roster:
             if player.playerId == playerId:
