@@ -247,6 +247,17 @@ class League(BaseLeague):
         dominance_matrix = two_step_dominance(win_matrix)
         power_rank = power_points(dominance_matrix, teams_sorted, week)
         return power_rank
+    
+    def playoff_chances(self, week: int=None):
+        '''Return playoff chances for any week'''
+
+        if not week or week <= 0 or week > self.current_week:
+            week = self.current_week
+        # calculate win for every week
+        win_matrix = []
+        teams_sorted = sorted(self.teams, key=lambda x: x.playoff_pct,
+                              reverse=False)
+        return teams_sorted
 
     def free_agents(self, week: int=None, size: int=50, position: str=None, position_id: int=None) -> List[Player]:
         '''Returns a List of Free Agents for a Given Week\n
